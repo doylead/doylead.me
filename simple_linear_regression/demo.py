@@ -19,12 +19,15 @@ y = gen_m * x + gen_b + np.random.rand(*x.shape)
 reg = linear_model.LinearRegression()
 reg.fit(x, y)
 
-# We extract scalar values from teh return format
+# We extract scalar values from the return format
 # scikit-learn provides
 skl_m = reg.coef_[0][0]
 skl_b = reg.intercept_[0]
 
-## Fit a model using our techniques
+## Fit a model using our techniques (specifically
+## using Equation (6) and abstract approaches)
+## We need the transpose to keep inner
+## dimensions consistent
 x_mean = np.average(x)
 y_mean = np.average(y)
 x_T = np.transpose(x)
@@ -65,5 +68,7 @@ plt.plot(x, afit_y,
 
 # Tidy things up and show the plot
 plt.tight_layout()
-plt.legend(frameon=False)
+plt.legend(frameon=False, prop={'size': 20})
+plt.xticks(fontsize=18)
+plt.yticks(fontsize=18)
 plt.show()
