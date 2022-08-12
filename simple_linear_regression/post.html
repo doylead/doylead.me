@@ -1,0 +1,286 @@
+<!-- wp:heading {"style":{"typography":{"fontSize":"24px"}}} -->
+<h2 style="font-size:24px">Introduction: The Linear Problem</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>The shortest distance between two points is a straight line.  "Connecting the dots" refers to the process of combining available pieces of information in a rather obvious way.  Linear regression is so deeply intuitive that it's hard to explain, and its often even harder to believe we can reach any profound insights with such simple tools.  </p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Let's examine why things may not be as limiting as they immediately appear.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>First, some quantities we're interested in may be linear in <em>only</em> <em>some</em> <em>parts of their domain</em>. For example in <a href="https://www.researchgate.net/figure/Human-growth-as-a-function-of-age-This-chart-developed-by-the-Center-of-Human-Health_fig1_7273759">this chart showing</a> boys' height as a function of their age we see a remarkably steady growth between ages 4 and 11. If we wanted to know if a set of clothes might fit a child in that age range after several years, linear regression may be a powerful tool to answer that question.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Second, some interactions can be <em>transformed</em> into linear relationships.  For example, an exponential relationship like <a href="https://en.wikipedia.org/wiki/Moore%27s_law">Moore's law</a> appears linear in a semi-log plot.  Put into more standard mathematical terms: a one-to-one (or bijective) mapping may exist such that a linear relationship holds on one "side" of the mapping.  Backing out a "real" value is as then as simple as knowing the appropriate reverse transformation.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Certainly linear regression has its limits.  Many quantities we're interested in are distinctly non-linear.  But the beauty of linear regression is that we have simple analytical tools available to us, and that linear models may fit surprisingly well when applied appropriately.  In the remainder of this post I'll focus on those tools</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"style":{"typography":{"fontSize":"24px"}}} -->
+<h2 style="font-size:24px">The Math Behind a Basic Linear Relationship</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>In this post I'll use a slight variation of the symbols I learned in high school:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$y_i=mx_i+b$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><tbody><tr><td>Symbol</td><td>Meaning</td></tr><tr><td>$$y_i$$</td><td>The linear model's prediction for point \(i\).  This is the dependent variable (y-axis)</td></tr><tr><td>$$m$$</td><td>The linear model's "slope", capturing the expected response in the dependent variable (y-axis) as the independent variable (x-axis) varies</td></tr><tr><td>$$x_i$$</td><td>The linear model's input for point \(i\).  This is the independent variable (x-axis)</td></tr><tr><td>$$b$$</td><td>The linear model's "intercept", capturing the expected value of the dependent variable (y-axis) when the independent variable (x-axis) is equal to 0</td></tr></tbody></table><figcaption>Symbols used in a basic linear model and their descriptions</figcaption></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>We know that \(y_i\) and \(x_i\) are specified by the data itself, so the free parameters here are \(m\) and \(b\).  </p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>How we set those parameters was (understandably) never covered in my high school lessons, as it requires some concepts from calculus.  First, we need to define some function that represents how good our choices for \(m\) and \(b\) are.  Recall that if our model were perfectly accurate then:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$y_i=mx_i+b$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>And therefore:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$mx_i+b-y_i=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This gives us a target.  We want to select \(m\) and \(b\) such that this expression (for all \(i\)) is as close to zero as possible.  </p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>However it's much simpler to find a function we can minimize or maximize than a function we'd like to set to a target value.  The squared difference will always be non-negative, so errors "as close to zero as possible" are the same as <em>minimized square errors</em>.  Notably the squaring function is not unique in this respect.  Any even exponent would work, as would other choices like the absolute value function.  We choose the squaring function for its simplicity in later analysis.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>So now we arrive at some loss function I'll call \(J(m,b)\).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$J(m,b)=\sum_{i=1}^N\left(mx_i+b-y_i\right)^2$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Here \(\sum\) simply indicates that we're adding the following expression for all data points from \(i=1\) to \(i=N\), also known as all data points.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>To find the values of \(m\) and \(b\) that minimize this expression we'll have to set the partial derivatives with respect to those terms to be equal to zero.  We'll start with the derivative with respect to \(b\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\frac{\partial J}{\partial b}=2\sum_{i=1}^N\left(mx_i+b-y_i\right)=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We can now exploit the linearity of addition to arrive at:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N mx_i +2\sum_{i=1}^N b-2\sum_{i=1}^N y_i=0\tag{1}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Here I've chosen to label this equation (1) as we'll come back to it later.  For now, we know that zero divided by any (non-zero) number is still zero, so we divide both sides by \(2N\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\frac{1}{N}\sum_{i=1}^N mx_i +\frac{1}{N}\sum_{i=1}^N b-\frac{1}{N}\sum_{i=1}^N y_i=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The second term is the sum of a constant (\(b\)) a total of \(N\) times, which simplifies rather easily to \(bN\).  Similarly \(m\) as it appears in the first term is a constant, and can be pulled out of the sum.  This leaves us with:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$m\cdot \frac{1}{N}\sum_{i=1}^N x_i +b-\frac{1}{N}\sum_{i=1}^N y_i=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>While it may not be obvious through the mathematics, the sums we see here now represent the average values of \(x\) and \(y\), as we're summing over all \(N\) values and dividing by the number of values (also \(N\)).  I'll denote these average quantities with an overbar, so \(\bar{x}\) is the average value of all \(x_i\) and \(\bar{y}\) is the average value of all \(y_i\).  Admittedly this is only a simplification in notation, but it leaves us with:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$m\bar{x}+b-\bar{y}=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Rearranging slightly:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$b=\bar{y}-m\bar{x}\tag{2}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Again, I've labeled this equation as we'll come back to it later.  For now, we've now gotten just about as much mileage as we can out of our first partial derivative, so let us turn to our second:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\frac{\partial J}{\partial m}=2\sum_{i=1}^N\left[x_i\cdot \left(mx_i+b-y_i\right)\right]\tag{3}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This is trickier than the last one, and it will unfortunately get messier before it gets tidier.  First, we know that any (finite) number multiplied by zero results in a product of zero.  Going back to the equation we labeled (1), this means that at our optimal values of \(m\) and \(b\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2c\sum_{i=1}^N\left(mx_i+b-y_i\right)=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>For all finite \(c\).  We also know that subtracting zero from a number does not change its value.  So combining this with the equation we've labeled (3):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N \left[x_i\left(mx_i+b-y_i\right)\right]-2c\sum_{i=1}^N\left(mx_i+b-y_i\right)=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>These sums clearly run over the same data, so we can combine them due to the linearity of addition:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[x_i\left(mx_i+b-y_i\right)-c\left(mx_i+b-y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Using the distributive property:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[\left(x_i-c\right)\left(mx_i+b-y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>It won't due us any good to have an expression for \(b\) that involves \(m\) if our expression for \(m\) also involves \(b\).  So now we use our result from the equation labeled (2) to remove any explicit reference to \(b\) here:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[\left(x_i-c\right)\left(mx_i+\bar{y}-m\bar{x}-y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Rearranging:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[\left(x_i-c\right)\left(mx_i-m\bar{x}+\bar{y}-y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We can once again use the distributive property to split this back into two sums:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[\left(x_i-c\right)\left(mx_i-m\bar{x}\right)\right]+2\sum_{i=1}^N\left[\left(x_i-c\right)\left(\bar{y}-y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Believe it or not, we're almost there.  We can rewrite this as:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[\left(x_i-c\right)\left(mx_i-m\bar{x}\right)\right]=2\sum_{i=1}^N\left[\left(x_i-c\right)\left(y_i-y\bar{y}\right)\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Where we've swapped the order of the terms in the sum on the right-hand side to provide the necessary negative sign.  We can now distribute out the constant \(m\) from the left-hand side:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$m\cdot 2\sum_{i=1}^N\left[\left(x_i-c\right)\left(x_i-\bar{x}\right)\right]=2\sum_{i=1}^N\left[\left(x_i-c\right)\left(y_i-\bar{y}\right)\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Dividing:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$m=\frac{\sum_{i=1}^N\left[\left(x_i-c\right)\left(y_i-\bar{y}\right)\right]}{\sum_{i=1}^N\left[\left(x_i-c\right)\left(x_i-\bar{x}\right)\right]}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This expression is generally true for any finite \(c\).  However, it's particularly nice if we choose \(c=\bar{x}\), leaving us with:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$m=\frac{\sum_{i=1}^N\left[\left(x_i-\bar{x}\right)\left(y_i-\bar{y}\right)\right]}{\sum_{i=1}^N\left(x_i-\bar{x}\right)^2}\tag{4}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Put into terms that may be more familiar to a statistician:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$m=\frac{\text{covariance}(x_i \ , \ y_i)}{\text{variance}(x_i)} \tag{5}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>As long as we use the population (biased) method of calculating variance.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Lastly for now, we will benefit later from realizing how much (4) looks like an inner product/dot product from linear algebra:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$m=\frac{\hat{x}\cdot\hat{y}}{\hat{x}\cdot\hat{x}} \tag{6}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Where \(\hat{x}=x_i-\bar{x}\) is an \(N\) dimensional abstract vector and similarly \(\hat{y}=y_i-\bar{y}\).  These represent "centered" data series, where the average of \(\hat{x}\) or \(\hat{y}\) is zero, and it's a common step in data per-processing.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Equations labeled (2) and one of (4), (5), or (6) provide easy closed-form expressions for calculating the best fit to a linear model for any data set.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading {"style":{"typography":{"fontSize":"24px"}}} -->
+<h2 style="font-size:24px">Demonstrative Python</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>I have put together a <a href="https://github.com/doylead/doylead.me/blob/main/simple_linear_regression/demo.py" data-type="URL" data-id="https://github.com/doylead/doylead.me/blob/main/simple_linear_regression/demo.py">simple script</a> that compares the results of the analytical techniques shown here to those in <a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html" data-type="URL" data-id="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html">scikit-learn's linear regression tools</a>.  The short version is that we see striking agreement.  In this example:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code>Method           Slope    Intercept
+------------  --------  -----------
+scikit-learn  0.365971      1.45889
+analytical    0.365971      1.45889</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:paragraph -->
+<p>Results that match up to the fifth decimal place suggest we're likely on to something.  That said, it's likely also worth comparing to the input data:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:image {"id":71,"width":575,"height":430,"sizeSlug":"large","linkDestination":"none","className":"center"} -->
+<figure class="wp-block-image size-large is-resized center"><img src="https://doylead.me/wp-content/uploads/2022/08/fit-1.svg" alt="" class="wp-image-71" width="575" height="430"/></figure>
+<!-- /wp:image -->
+
+<!-- wp:paragraph -->
+<p>Once again, the fit seems to be quite reasonable in this case.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>tl;dr</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>We've gone over some of the justification for why a linear model may be useful, namely (1) in simple problems, (2) in limited subsets of more complicated problems, and (3) in problems where we can construct a bijective mapping into a linear space.  We've also highlighted one of the key features of the linear model - an analytical solution we can express in terms of sums, (co)variances, and linear algebra.</p>
+<!-- /wp:paragraph -->
