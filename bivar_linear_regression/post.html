@@ -1,0 +1,330 @@
+<!-- wp:heading -->
+<h2>Introduction</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>In a <a href="https://doylead.me/?p=19">previous post</a> I discussed the basic operational principles of linear regression with a single input variable.  This was a blend of material I'd first seen in high school and material I'd first seen in graduate school, and I wrote it to serve as a launch point for discussions that are more germane to aspiring or practicing data scientists.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>The Math Behind Bivariate Linear Regression</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Here I'll adopt notation I first saw in a class on Coursera taught by Andrew Ng:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$Y_i = \theta_0+\theta_1X_{i, 1}+\theta_2X_{i, 2}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><tbody><tr><td>Symbol</td><td>Meaning</td></tr><tr><td>$$Y_i$$</td><td>The linear model’s prediction for point \(i\). This is the dependent variable</td></tr><tr><td>$$\theta_0$$</td><td>The linear model’s “intercept”, capturing the expected value of the dependent variable when all independent variables are equal to 0</td></tr><tr><td>$$\theta_1$$</td><td>The linear model’s “slope” with respect to one independent variable, capturing the expected response in the dependent variable as independent variable \(X_1\) varies</td></tr><tr><td>$$X_{i, 1}$$</td><td>The measurement of the independent variable \(X_1\) for measurement \(i\)</td></tr><tr><td>$$\theta_2$$</td><td>The linear model’s “slope” with respect to one independent variable, capturing the expected response in the dependent variable as independent variable \(X_2\) varies</td></tr><tr><td>$$X_{i, 2}$$</td><td>The measurement of the independent variable \(X_2\) for measurement \(i\)</td></tr></tbody></table><figcaption>Symbols used in a bivariate linear model and their descriptions</figcaption></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>This establishes a loss function as before:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$J=\sum_{i=1}^N\left(\theta_0+\theta_1X_{i, 1}+\theta_2X_{i, 2}-Y_i\right)^2$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\frac{\partial J}{\partial \theta_0}=2\sum_{i=1}^N\left(\theta_0+\theta_1X_{i, 1}+\theta_2X_{i, 2}-Y_i\right)=0 \tag{1}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>At this point we can once again exploit the linearity of addition to arrive at:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\theta_0+2\sum_{i=1}^N\theta_1X_{i, 1}+2\sum_{i=1}^N\theta_2X_{i, 2}-2\sum_{i=1}^NY_i=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Dividing both sides by \(2N\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\frac{1}{N}\sum_{i=1}^N\theta_0+\frac{1}{N}\sum_{i=1}^N\theta_1X_{i, 1}+\frac{1}{N}\sum_{i=1}^N\theta_2X_{i, 2}-\frac{1}{N}\sum_{i=1}^NY_i=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>As before the values of our coefficients \(\theta\) do not depend on \(i\), so we can extract them from the sums.  After doing so the remaining terms become straightforward averages.  I'll use \(\bar{X_1}\) to refer to the average of all observations \(X_{i,1}\).  Then:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_0+\theta_1\bar{X_1}+\theta_2\bar{X}_2-\bar{Y}=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Solving for \(\theta_0\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_0=\bar{Y}-\theta_1\bar{X_1}-\theta_2\bar{X_2} \tag{2}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Switching to the next derivative:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\frac{\partial J}{\partial \theta_1}=2\sum_{i=1}^N\left[X_{i, 1}\left(\theta_0+\theta_1X_{i, 1}+\theta_2X_{i, 2}-Y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Here we use the same trick as last time: we know subtracting by zero does not change the value of an expression, and in Equation (1) we have a conveniently written zero for this purpose.  We introduce the constant \(C_1\) because any multiple of that zero will also be zero:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[X_{i, 1}\left(\theta_0+\theta_1X_{i, 1}+\theta_2X_{i, 2}-Y_i\right)\right]-2C_1\sum_{i=1}^N\left(\theta_0+\theta_1X_{i, 1}+\theta_2X_{i, 2}-Y_i\right)=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Once again using the linearity of addition:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[\left(X_{i, 1}-C_1\right)\left(\theta_0+\theta_1X_{i, 1}+\theta_2X_{i, 2}-Y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Substituting our expression for \(\theta_0\) from Equation (2):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[\left(X_{i, 1}-C_1\right)\left(\bar{Y}-\theta_1\bar{X_1}-\theta_2\bar{X_2}+\theta_1X_{i, 1}+\theta_2X_{i, 2}-Y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Rearranging:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[\left(X_{i, 1}-C_1\right)\left(\theta_1X_{i, 1}-\theta_1\bar{X_1}+\theta_2X_{i, 2}-\theta_2\bar{X_2}+\bar{Y}-Y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We can now break this into three separate sums again:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\left[\left(X_{i, 1}-C_1\right)\left(\theta_1X_{i, 1}-\theta_1\bar{X_1}\right)\right]+2\sum_{i=1}^N\left[\left(X_{i, 1}-C_1\right)\left(\theta_2X_{i, 2}-\theta_2\bar{X_2}\right)\right]+2\sum_{i=1}^N\left[\left(X_{i, 1}-C_1\right)\left(\bar{Y}-Y_i\right)\right]=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Solving for \(\theta_1\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_1=\frac{\sum_{i=1}^N\left(X_{i, 1}-C_1\right)\left(Y_i-\bar{Y}\right)}{\sum_{i=1}^N\left(X_{i, 1}-C_1\right)\left(X_{i, 1}-\bar{X_1}\right)}-\theta_2\frac{\sum_{i=1}^N\left(X_{i, 1}-C_1\right)\left(X_{i, 2}-\bar{X_2}\right)}{\sum_{i=1}^N\left(X_{i, 1}-C_1\right)\left(X_{i, 1}-\bar{X_1}\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Substituting \(C_1=\bar{X_1}\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_1=\frac{\sum_{i=1}^N\left(X_{i, 1}-\bar{X}\right)\left(Y_i-\bar{Y}\right)}{\sum_{i=1}^N\left(X_{i, 1}-\bar{X_1}\right)^2}-\theta_2\frac{\sum_{i=1}^N\left(X_{i, 1}-\bar{X_1}\right)\left(X_{i, 2}-\bar{X_2}\right)}{\sum_{i=1}^N\left(X_{i, 1}-\bar{X_1}\right)^2}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>First, we see how this easily reduces to our solution of the single variable linear regression if \(\theta_2=0\), as we'd expect.  However, I'll now insist on using the notion of abstract vector spaces to simplify notation.  Given \(\hat{X_1}=X_{i, 1}-\bar{X}\) , \(\hat{X_2}=X_{i, 2}-\bar{X_2}\) , and \(\hat{Y}=Y_i-\bar{Y}\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_1=\frac{\hat{X_1}\cdot\hat{Y}}{\hat{X_1}\cdot\hat{X_1}}-\theta_2\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_1}\cdot\hat{X_1}} \tag{3}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Second, we see that we're not quite done yet, as we've introduced another degree of freedom.  So on to the next derivative:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\frac{\partial J}{\partial\theta_2}=2\sum_{i=1}^N\left[X_{i, 2}\left(\theta_0+\theta_1X_{i, 1}+\theta_2X_{i, 2}-Y_i\right)\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>From here we can see that a lot of the algebra will be similar to before.  There's some symmetry between \(\frac{\partial J}{\partial\theta_1}\) and \(\frac{\partial J}{\partial\theta_2}\), so I hope you'll pardon me if I say "repeating the previous steps, with the exception of using the constant \(C_2\) rather than \(C_1\), we'd eventually arrive at:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2=\frac{\sum_{i=1}^N\left(X_{i, 2}-C_2\right)\left(Y_i-\bar{Y}\right)}{\sum_{i=1}^N\left(X_{i, 2}-C_2\right)\left(X_{i, 2}-\bar{X_2}\right)}-\theta_1\frac{\sum_{i=1}^N\left(X_{i, 2}-C_2\right)\left(X_{i, 1}-\bar{X_1}\right)}{\sum_{i=1}^N\left(X_{i, 2}-C_2\right)\left(X_{i, 2}-\bar{X_2}\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Substituting \(C_2=\bar{X_2}\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2=\frac{\sum_{i=1}^N\left(X_{i, 2}-\bar{X_2}\right)\left(Y_i-\bar{Y}\right)}{\sum_{i=1}^N\left(X_{i, 2}-\bar{X_2}\right)^2}-\theta_1\frac{\sum_{i=1}^N\left(X_{i, 2}-\bar{X_2}\right)\left(X_{i, 1}-\bar{X_1}\right)}{\sum_{i=1}^N\left(X_{i, 2}-\bar{X_2}\right)^2}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Expressed in the abstract vector space:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2=\frac{\hat{X_2}\cdot\hat{Y}}{\hat{X_2}\cdot\hat{X_2}}-\theta_1\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_2}\cdot\hat{X_2}}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Using our result from Equation (3):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2=\frac{\hat{X_2}\cdot\hat{Y}}{\hat{X_2}\cdot\hat{X_2}}-<br>\left[\frac{\hat{X_1}\cdot\hat{Y}}{\hat{X_1}\cdot\hat{X_1}}-\theta_2\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_1}\cdot\hat{X_1}}\right]\cdot<br>\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_2}\cdot\hat{X_2}}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Distributing:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2=\frac{\hat{X_2}\cdot\hat{Y}}{\hat{X_2}\cdot\hat{X_2}}-<br>\left(\frac{\hat{X_1}\cdot\hat{Y}}{\hat{X_1}\cdot\hat{X_1}}\right)\left(\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_2}\cdot\hat{X_2}}\right)<br>+\theta_2\left(\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_1}\cdot\hat{X_1}}\right)<br>\left(\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_2}\cdot\hat{X_2}}\right)$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Rearranging:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2-\theta_2\left(\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_1}\cdot\hat{X_1}}\right)<br>\left(\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_2}\cdot\hat{X_2}}\right)=\frac{\hat{X_2}\cdot\hat{Y}}{\hat{X_2}\cdot\hat{X_2}}-<br>\left(\frac{\hat{X_1}\cdot\hat{Y}}{\hat{X_1}\cdot\hat{X_1}}\right)\left(\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_2}\cdot\hat{X_2}}\right)$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Distributing \(\theta_2\) out of the left-hand side:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2\left[1-\left(\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_1}\cdot\hat{X_1}}\right)\left(\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_2}\cdot\hat{X_2}}\right)\right]=\frac{\hat{X_2}\cdot\hat{Y}}{\hat{X_2}\cdot\hat{X_2}}-<br>\left(\frac{\hat{X_1}\cdot\hat{Y}}{\hat{X_1}\cdot\hat{X_1}}\right)\left(\frac{\hat{X_1}\cdot\hat{X_2}}{\hat{X_2}\cdot\hat{X_2}}\right)$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Multiplying all terms by \(\left(\hat{X_1}\cdot\hat{X_1}\right)\left(\hat{X_2}\cdot\hat{X_2}\right)\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2\left[\left(\hat{X_1}\cdot\hat{X_1}\right)\left(\hat{X_2}\cdot\hat{X_2}\right)-\left(\hat{X_1}\cdot\hat{X_2}\right)^2\right]=\left(\hat{X_2}\cdot\hat{Y}\right)\left(\hat{X_1}\cdot\hat{X_1}\right)-\left(\hat{X_1}\cdot\hat{Y}\right)\left(\hat{X_1}\cdot\hat{X_2}\right)$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Solving for \(\theta_2\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2=\frac{\left(\hat{X_2}\cdot\hat{Y}\right)\left(\hat{X_1}\cdot\hat{X_1}\right)-\left(\hat{X_1}\cdot\hat{Y}\right)\left(\hat{X_1}\cdot\hat{X_2}\right)}{\left(\hat{X_1}\cdot\hat{X_1}\right)\left(\hat{X_2}\cdot\hat{X_2}\right)-\left(\hat{X_1}\cdot\hat{X_2}\right)^2} \tag{4}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Now that we have a way of calculating \(\theta_2\) with only the input data, we could then use that input data alongside \(\theta_2\) to calculate \(\theta_1\), and the input data alongside \(\theta_2\) and \(\theta_1\) to find \(\theta_0\).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>A New Limitation and Word of Caution:</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Before we go into any mathematical terms, let's use our intuition.  A linear model with two independent variables has two constituent "slopes" which represent the change in our predictions when we vary either independent variable.  Here the word "independent" is doing some heavy lifting.  We are implying that <em>changing one input variable may change the predicted output, but it will not change the other input variable.</em></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>If we're given a sheet of graph paper, it's easy to imagine that moving towards the right edge or towards the top edge are always orthogonal operations.  But not all combinations of real data we're interested in will be so easily separable.  </p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>As a trivial example, let us consider input variables which represent the same physical quantity using different units.  This may seem far-fetched, but it's not uncommon for data sets to be constructed this way to interface with diverse users more effectively.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>If you attempted to construct a linear model to predict the price of a quantity of bananas based on its weight (in grams) and its weight (in ounces), you may build a model that predicts appropriate answers.  But the intuition behind that model - what \(\theta_1\) and \(\theta_2\) physically represent - will be entirely lost.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Instead of having a price per gram (which may be interesting to some) or a price per ounce (which may be interesting to others) you'd likely confuse your colleagues and lead them to underestimate the price of a lovely source of potassium.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>There are other effects that are too complicated to mention here, like impacting the confidence intervals we have for each parameter's fit.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Here we repeat equation (4) to show this newly-emerging pitfall in the math.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_2=\frac{\left(\hat{X_2}\cdot\hat{Y}\right)\left(\hat{X_1}\cdot\hat{X_1}\right)-\left(\hat{X_1}\cdot\hat{Y}\right)\left(\hat{X_1}\cdot\hat{X_2}\right)}{\left(\hat{X_1}\cdot\hat{X_1}\right)\left(\hat{X_2}\cdot\hat{X_2}\right)-\left(\hat{X_1}\cdot\hat{X_2}\right)^2}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This expression is only determinable when the denominator is not equal to zero.  We expect problems when:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\hat{X_1}\cdot\hat{X_1}\right)\left(\hat{X_2}\cdot\hat{X_2}\right)-\left(\hat{X_1}\cdot\hat{X_2}\right)^2=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Rearranging slightly:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\hat{X_1}\cdot\hat{X_1}\right)\left(\hat{X_2}\cdot\hat{X_2}\right)=\left(\hat{X_1}\cdot\hat{X_2}\right)^2$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\frac{\left(\hat{X_1}\cdot\hat{X_2}\right)^2}{\left(\hat{X_1}\cdot\hat{X_1}\right)\left(\hat{X_2}\cdot\hat{X_2}\right)}=1$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Using slightly different notation:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\rho_{X_1,X_2}^2 = 1$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>And lastly we take the square root:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\rho_{X_1.X_2} = \pm 1$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Where \(\rho\) is the <a href="https://en.wikipedia.org/wiki/Pearson_correlation_coefficient">Pearson Correlation Coefficient</a>.  If an exact linear relationship exists between them then this correlation coefficient will equal one or negative one, and those data would be said to be <strong>colinear</strong>.  Another way of expressing this idea is that these two variables are not independent - changing one variable <em>must</em> change the other.  Finally, we see that colinear input data requires our calculation for \(\theta_2\) to divide by zero, which is simply not possible.  As a result, we should be mindful not to use colinear inputs when constructing linear models.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Notably as \(\rho\) approaches one or negative one (strongly correlated, but not perfectly correlated data sets) we may see issues surrounding numerical stability, including possible underflow/overflow issues depending on our implementations of these algorithms.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The problems associated with collinearity may very well seem small in this context where we have only two input variables.  However this is a major practical concern for many data science problems at scale which may instead have hundreds or thousands of input variables.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>Demonstrative Python</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Again I've put together a <a href="https://github.com/doylead/doylead.me/blob/main/bivar_linear_regression/demo.py">simple script</a> that compares the methods outlined here to <a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html">scikit-learn's linear regression tools</a>.  Once more, we find an exact match between the tools outlined here and a trusted third-party package.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code>Method          Theta0    Theta1    Theta2
+------------  --------  --------  --------
+scikit-learn   0.37249   1.07506  0.405989
+analytical     0.37249   1.07506  0.405989</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading -->
+<h2>tl;dr</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Here we've gone over some of the complexities that come from extending a simple linear model to include two independent input variables.  First, we noted significantly more complicated algebra that essentially required we use abstract vector space notation to fit relevant expressions on to a single line.  Second, we highlighted a problem that only emerges for multi-variate linear models: namely that the inputs must be linearly independent, and that so-called colinear inputs can lead to singularities in the math.</p>
+<!-- /wp:paragraph -->
