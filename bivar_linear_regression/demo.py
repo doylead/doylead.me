@@ -1,5 +1,5 @@
 '''This stand-alone script accompanies a blog post available here:
-
+https://doylead.me/?p=88
 
 The goal of this script is to generate data which follow a basic bivariate linear relationship and
 to show two different methods of calculating the parameters for the best linear fit.  We show that
