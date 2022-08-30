@@ -1,0 +1,674 @@
+<!-- wp:heading -->
+<h2>Introduction</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Previously I have covered <a href="https://doylead.me/?p=19">simple linear regression</a> and <a href="https://doylead.me/?p=88">bivariate linear regression</a>.  In both cases we were able to analytically determine the models' optimal parameters, but particularly in the bivariate case actually calculating those optimal values took quite a bit of algebra and there were multiple areas ripe for making simple mistakes.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>However, often data scientists are interested in regressions that contain hundreds or thousands of inputs.  Proceeding as we had before simply would not be feasible.  So here we use the tools and language developed in our previous posts to develop a technique that generalizes to any number of inputs with minimal additional work (for users).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>The Math Behind Many-Input Linear Regression</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>We can imagine several different ways to write a linear model with an arbitrary number of input variables.  We could start by extending the notation we used in our previous bivariate model:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$Y_i=\theta_0 + X_{i, 1}\theta_1 + X_{i, 2}\theta_2 + X_{i, 3}\theta_3 + \cdots$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We could simply increment the indices to include more and more variables.  Using \(\Sigma\) notation we can express a linear model with \(M\) inputs:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$Y_i=\theta_0 +\sum_{j=1}^M X_{i, j}\theta_j$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This is neat, but could be neater if we set \(X_{i,0}=1\), which would allow us to write:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$Y_i = \sum_{j=0}^M X_{i,j}\theta_j$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:table -->
+<figure class="wp-block-table"><table><tbody><tr><td>Symbol</td><td>Meaning</td></tr><tr><td>$$Y_i$$</td><td>The linear model's prediction for observation \(i\).  This is the dependent variable</td></tr><tr><td>$$\theta_j$$</td><td>For \(j=0\): linear model’s “intercept”, capturing the expected value of the dependent variable when all independent variables are equal to 0<br><br>For \(j\not= 0\): The "slope" measuring the change in the model's prediction as independent variable </td></tr><tr><td>$$X_{i,j}$$</td><td>For \(j=0\): 1<br><br>For \(j\not=0\): The measurement of the independent variable \(X_J\) for measurement \(i\)</td></tr></tbody></table><figcaption>Symbols used in a multivariate linear model and their descriptions</figcaption></figure>
+<!-- /wp:table -->
+
+<!-- wp:paragraph -->
+<p>Our loss function is then (using index notation, which lends  itself more easily to differentiation)</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$J=\sum_{i=1}^N\left[\sum_{j=0}^M \left(X_{i, j}\theta_j\right) - Y_i\right]^2$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We now endeavor to do work that is incredibly useful, but conceptually challenging.  Rather than considering \(\theta_0\), \(\theta_1\), et cetera, let's consider some arbitrary \(\theta_k\).  Then:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\frac{\partial J}{\partial \theta_k}= 2\sum_{i=1}^N X_{i,k}\left[\sum_{j=1}^M \left(X_{i,j}\theta_j\right)-Y_i\right]=\mathbf{0}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Here we'll bold the zero on the right hand side to indicate that it is true for each \(k\).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This result may not be obvious, and there are several ways of wrapping your head around it.  I personally find it most informative to imagine which terms multiply.  When we take the derivative of a term in \(\theta_k\) that is linear in \(\theta_k\) we're simply selecting the term that (in the original expression) was multiplied by \(\theta_k\).  For a given observation \(i\) this multiplied term is \(X_{i,k}\).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Exploiting the linearity of addition we can manipulate this expression as:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N X_{i,k}\sum_{j=0}^M \left(X_{i,j}\theta_j\right)-2\sum_{i=1}^N X_{i,k}Y_i=\mathbf{0}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Because \(X_{i,k}\) does not depend on \(j\) we can move it into the sum on the left-hand side:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\sum_{i=1}^N\sum_{j=0}^M X_{i,k}X_{i,j}\theta_j-2\sum_{i=1}^N X_{i,k}Y_i=\mathbf{0}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Dividing all terms by \(2\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\sum_{i=1}^N\sum_{j=0}^M X_{i,k}X_{i,j}\theta_j-\sum_{i=1}^N X_{i,k}Y_i=\mathbf{0}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Finally we rearrange to get:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\sum_{i=1}^N\sum_{j=0}^M X_{i,k}X_{i,j}\theta_j=\sum_{i=1}^N X_{i,k}Y_i \tag{1}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>At this point we will want to revert to our notion of an abstract vector space.  In particular we will want to avail ourselves of the notion of an inner product.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"style":{"typography":{"fontSize":"22px"}}} -->
+<p style="font-size:22px"><strong>Linear Algebra Aside #1:</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The inner product of some \(a\) row by \(b\) column matrix \(\mathbf{M}\) and some length \(b\) vector \(\mathbf{v}\) is another vector \(\mathbf{u}\) of length \(a\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{M}\cdot \mathbf{v}=\mathbf{u}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Written in element-wise notation this is expressed as:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\sum_{j=1}^b M_{i,j}v_j = u_i$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The inner product of some matrix \(a\) row by \(b\) column matrix \(\mathbf{M}\) and some other \(b\) row by \(c\) column matrix \(\mathbf{P}\) is an \(a\) row by \(c\) column matrix \(\mathbf{Q}\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{M}\cdot \mathbf{P}=\mathbf{Q}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Written in element-wise notation:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\sum_{j=1}^b M_{i,j}P_{j,k}=Q_{i,k}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Essentially we see that summing over one dimension of a matrix or array is represented by an inner product/"dot" product provided that the dimension summed over is in the second/only/"column" subscript of the first term and the first/only/"row" subscript of the second term.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Notably the inner product <strong>is associative</strong>.  As a simple example:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{M}\cdot\left(\mathbf{P}\cdot\mathbf{v}\right)=\sum_j M_{i,j}\left(\sum_k P_{j,k}v_k\right)$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Because \(M_{i,j}\) does not depend on \(k\) we can pull it into the sum with respect to \(k\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{M}\cdot\left(\mathbf{P}\cdot\mathbf{v}\right)=\sum_j\sum_k M_{i,j}P_{j,k}v_k$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>However, we can get to the same result using different parenthetical groupings:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{M}\cdot\mathbf{P}\right)\cdot v_k=\sum_k\left(\sum_j M_{i,j}P_{j,k}\right)v_k$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Using this distributive property of multiplication and addition we can set aside our parentheses:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{M}\cdot\mathbf{P}\right)\cdot v_k=\sum_k\sum_j M_{i,j}P_{j,k}v_k$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We can reorder the sums because addition is commutative, therefore:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{M}\cdot\mathbf{P}\right)\cdot v_k=\sum_j\sum_k M_{i,j}P_{j,k}v_k$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>And finally:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{M}\cdot\left(\mathbf{P}\cdot\mathbf{v}\right)=\left(\mathbf{M}\cdot\mathbf{P}\right)\cdot\mathbf{v}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Also notably the inner product <strong>is not commutative</strong>.  </p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{M}\cdot\mathbf{P}\not=\mathbf{P}\cdot\mathbf{M}$$.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Perhaps the simplest proof of this fact is that if \(\mathbf{M}\) is an \(a\) row by \(b\) column matrix and \(\mathbf{P}\) is a \(b\) row by \(c\) column matrix then \(\mathbf{M}\cdot \mathbf{P}\) will be an \(a\) row by \(c\) column matrix, while \(\mathbf{P}\cdot\mathbf{M}\) can only even be computed in the special case where \(a=c\).  Notably if \(a=b=c\) then \(\mathbf{M}\cdot\mathbf{P}=\left(\mathbf{P}\cdot\mathbf{M}\right)^T\).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Here (and elsewhere) we use notation like \(\mathbf{M}^T\) to indicate the <strong>tranpose</strong> of matrix \(\mathbf{M}\).  If \(\mathbf{M}\) is an \(a\) row by \(b\) column matrix, \(\mathbf{M}^T\) is a \(b\) row by \(a\) column matrix with values defined by:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$M_{i,j} = M^T_{j,i}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"style":{"typography":{"fontSize":"22px"}}} -->
+<p style="font-size:22px"><strong>Back to The Derivation:</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Our goal now is to manipulate Equation (1) using the inner product rules we've just discussed.  As a reminder, we start with:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\sum_{i=1}^N\sum_{j=0}^M X_{i,k}X_{i,j}\theta_j=\sum_{i=1}^N X_{i,k}Y_i$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The sum over \(j\) in the left hand side of the equation follows the rules of inner products, as it appears in the second/column index of a matrix and the first/row index of a vector.  However the sums over \(i\) in the both expressions don't quite fit.  We'd need \(i\) to appear in the second/column subscript of the matrix \(\mathbf{X}\).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Thankfully, we've also shown notation that will allow us to switch the indices of a matrix - taking its transpose.  We then have (in element-wise notation):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\sum_{i=1}^N\sum_{j=0}^M X^T_{k,i}X_{i,j}\theta_j=\sum_{i=1}^N X^T_{k,i}\theta_k$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>And in abstract vector space:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{X}^T\cdot\mathbf{X}\right)\cdot\mathbf{\theta}=\mathbf{X}^T\cdot\mathbf{Y} \tag{2}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Admittedly I've taken the liberty of enclosing parentheses in a way that will be helpful later, but has not yet been explained (though I've proven I am free to do so).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"style":{"typography":{"fontSize":"22px"}}} -->
+<p style="font-size:22px"><strong>Linear Algebra Aside #2:</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We consider problems of the form:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{M}\cdot \mathbf{v}=\mathbf{u}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Where \(\mathbf{M}\) is a matrix and \(\mathbf{v}\) and \(\mathbf{u}\) may be either matrices or vectors.  We imagine that we know \(\mathbf{M}\) and \(\mathbf{u}\) and want to find \(\mathbf{v}\).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>If these terms were scalars we would solve for \(\mathbf{v}\) by dividing both sides of the equation by \(\mathbf{M}\).  However they are not scalars, and we do not have a direct equivalent to division in the context of matrices.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>First we will find it helpful to establish the concept of an identity matrix \(\mathbf{I}\).  While there's much to say about this special matrix, we're currently most interested in its properties with the inner product.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{I}\cdot\mathbf{M}=\mathbf{M}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>For all matrices \(\mathbf{M}\) and</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{I}\cdot\mathbf{v}=\mathbf{v}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>For all vectors \(\mathbf{v}\).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Now that we've established an identity operation, we can attempt to construct that identity operation using the inner product.  Namely we imagine something we'll call the inverse of a matrix:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{M}^{-1}\cdot\mathbf{M}=\mathbf{M}\cdot\mathbf{M}^{-1}=I$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This is a helpful step, but we need to proceed with caution.  We have not proven the matrix \(\mathbf{M}^{-1}\) exists, and in many cases (including when \(\mathbf{M}\) is not "square") there is no matrix \(\mathbf{M}^{-1}\) that meets this criterion.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>A matrix \(\mathbf{M}\) is invertible if the product of its eigenvalues (aka its determinant) is non-zero.  One way that we can prove that the product of the eigenvalues is non-zero is to show that each eigenvalue is positive (as the product of a series of positive terms will always be greater than zero).  Therefore we can prove that a matrix is invertible if it is positive definite.  That is to say that it satisfies the expression</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{v}^T\cdot\mathbf{M}\cdot\mathbf{v}&gt;0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>For all non-zero vectors \(\mathbf{v}\).  If \(\mathbf{v}\) is then an eigenvector of \(\mathbf{M}\) with eigenvalue \(\lambda\) we would have:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{v}^T\cdot\left(\mathbf{M}\cdot\mathbf{v}\right)=\mathbf{v}^T\cdot \lambda\mathbf{v}=\lambda\vert\mathbf{v}\vert^2$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This means that the definition of positive definite matrices implies for each eigenvector:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\lambda\vert\mathbf{v}\vert^2&gt;0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>For any non-zero vector \(\mathbf{v}\) we know \(\vert\mathbf{v}\vert^2&gt;0\), so this is equivalent to showing:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\lambda&gt;0$$ </p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Which implies \(\lambda\not=0\).  Notably not all invertible matrices are positive definite, as eigenvalues of an invertible matrix may be negative.  Proving a matrix is positive definite is <strong>sufficient</strong> to prove invertibility, but is not <strong>necessary</strong> to prove invertibility (though it will be enough for us).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Notably we will not cover how to invert a matrix.  Once we have proven it is possible, we will rely on software to perform the necessary operations for us.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph {"style":{"typography":{"fontSize":"22px"}}} -->
+<p style="font-size:22px"><strong>Back to the Derivation (Again):</strong></p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>First, we recall Equation (2):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{X}^T\cdot\mathbf{X}\right)\cdot\mathbf{\theta}=\mathbf{X}^T\cdot\mathbf{Y}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>In this case we know \(\mathbf{X}\), \(\mathbf{X}^T\), and \(\mathbf{Y}\).  We seek to find \(\mathbf{\theta}\).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We have previously demonstrated that the inner product is associative, and as such we were allowed to place parentheses at our leisure here.  We also know that the result of the inner product of two matrices is itself a matrix.  Therefore if the matrix specified by \(\mathbf{X}^T\cdot\mathbf{X}\) is invertible we could solve for \(\mathbf{\theta}\) rather easily.  Starting with the trivial:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{X}^T\cdot\mathbf{X}\right)^{-1}=\left(\mathbf{X}^T\cdot\mathbf{X}\right)^{-1}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Taking the inner product of each side with terms we've previously proven are equivalent:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{X}^T\cdot\mathbf{X}\right)^{-1}\cdot\left(\mathbf{X}^T\cdot\mathbf{X}\right)\cdot\mathbf{\theta}=\left(\mathbf{X}^T\cdot\mathbf{X}\right)^{-1}\cdot\mathbf{X}^T\cdot\mathbf{Y}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Simplifying the left-hand side:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{I}\cdot\mathbf{\theta}=\left(\mathbf{X}^T\cdot\mathbf{X}\right)^{-1}\cdot\mathbf{X}^T\cdot\mathbf{Y}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{\theta}=\left(\mathbf{X}^T\cdot\mathbf{X}\right)^{-1}\cdot\mathbf{X}^T\cdot\mathbf{Y} \tag {3}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Now we have the burden of proving these last steps are allowed and that the matrix \(\mathbf{X}^T\cdot\mathbf{X}\) is invertible.  To do so we'll prove this matrix is positive definite as outlined above:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{v}^T\cdot\left(\mathbf{X}^T\cdot\mathbf{X}\right)\cdot\mathbf{v}&gt;0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Again we'll take advantage of the associativity of the inner product:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{v}^T\cdot\mathbf{X}^T\right)\cdot\left(\mathbf{X}\cdot\mathbf{v}\right)&gt;0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We're able to tidy this a bit with another identity based on symmetry that we won't prove here:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{X}\cdot\mathbf{v}\right)^T\cdot\left(\mathbf{X}\cdot\mathbf{v}\right)&gt;0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\vert\mathbf{X}\cdot\mathbf{v}\vert^2&gt;0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This represents the magnitude of some vector, which clearly this cannot be negative.  We need only concern ourselves now with proving:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\vert\mathbf{X}\cdot\mathbf{v}\vert^2\not=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This is equivalent to proving</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{X}\cdot\mathbf{v}\not=\mathbf{0}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>There must be no non-zero vector \(\mathbf{v}\) in the null space of matrix \(\mathbf{X}\).  This is equivalent to saying that if the matrix \(\mathbf{X}\) has \(n\) columns it must be rank \(n\).  However, while those descriptions are accurate they do not strike me as terribly useful.  I'd be hard-pressed to inspect a matrix to determine its null space or its rank.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>I find it more helpful to think in terms of linear independence.  If the columns of \(\mathbf{X}\) are linearly independent, then \(\mathbf{X}^T\cdot\mathbf{X}\) is invertible and Equation (3) is valid.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This is an extension of the colinearity problem we've outlined in the bivariate case.  However now we must be on guard not only that two inputs might be the same, but that any input could be expressed as a linear combination of other inputs.  If any input could be expressed as a linear combination of other inputs, \(\mathbf{X}^T\cdot\mathbf{X}\) is not invertible and these expressions are meaningless (though our software may not be kind enough to tell us as much).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This post is already rather lengthy - we'll go on to discuss how to detect these colinearities in a future post.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>Recovering the Result for a Single-Variable Linear Regression:</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>In the case of a single input variable we have:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{X}=\left[\begin{array}{cc} 1 &amp; X_{1,1} \\ 1 &amp; X_{2,1} \\ \vdots &amp; \vdots \\ 1 &amp; X_{N,1} \end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Then:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{X}^T\cdot\mathbf{X}=\left[\begin{array}{cccc}1 &amp; 1 &amp; \dots &amp; 1\\ X_{1,1} &amp; X_{2,1} &amp; \dots &amp; X_{N,1}\end{array}\right]\cdot\left[\begin{array}{cc} 1 &amp; X_{1,1} \\ 1 &amp; X_{2,1} \\ \vdots &amp; \vdots \\ 1 &amp; X_{N,1} \end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{X}^T\cdot\mathbf{X}=\left[\begin{array}{cc}N &amp; \sum_{i=1}^N X_{i,1} \\ \sum_{i=1}^N X_{i,1} &amp; \sum_{i=1}^N X_{i,1}^2\end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We will find it much simpler to express the sum of all observations for \(X_{i,1}\) as the number of observations multiplied by the average value of all observations:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{X}^T\cdot\mathbf{X}=\left[\begin{array}{cc}N &amp; N\bar{X_1} \\N \bar{X_1} &amp; \sum_{i=1}^N X_{i,1}^2\end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The inverse of a two-by-two matrix (with non-zero determinant) is analytically defined:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{X}^T\cdot\mathbf{X}\right)^{-1}=\frac{1}{N\sum_{i=1}X_{i,1}^2-N^2\bar{X_1}^2}\left[\begin{array}{cc}\sum_{i=1}^N X_{i,1}^2 &amp; -N\bar{X_1} \\ -N\bar{X_1} &amp; N\end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Here eagle-eyed observers may recognize something resembling an old friend in the denominator of the fraction.  We recall one definition of the variance:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\text{var}\left(X_1\right)=\frac{1}{N}\sum_{i=1}^N X_{i,1}^2-\left(\frac{1}{N}\sum_{i=1}^N X_{i,1}\right)^2=\frac{1}{N}\sum_{i=1}^N X_{i,1}^2-\bar{X_1}^2$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Using this result:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\left(\mathbf{X}^T\cdot\mathbf{X}\right)^{-1}=\frac{1}{N^2 \ \text{var}\left(X_1\right)}\left[\begin{array}{cc}\sum_{i=1}^N X_{i,1}^2 &amp; -N\bar{X_1} \\ -N\bar{X_1} &amp; N\end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We continue along with our derivation:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{X}^T\cdot\mathbf{Y}=\left[\begin{array}{cccc}1 &amp; 1 &amp; \dots &amp; 1\\ X_{1,1} &amp; X_{2,1} &amp; \dots &amp; X_{N,1} \end{array}\right]\cdot\left[\begin{array}{c}Y_1 \\ Y_2 \\ \vdots \\ Y_N\end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{X}^T\cdot\mathbf{Y}=\left[\begin{array}{c}\sum_{i}^N Y_i \\ \sum_{i=1}^N X_{i,1}Y_i\end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Here we'll again choose to simplify our notation by converting a sum to a multiple of an average:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{X}^T\cdot\mathbf{Y}=\left[\begin{array}{c}N\bar{Y}\\ \sum_{i=1}^N X_{i,1}Y_i\end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Combining these results:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{\theta}=\left(\mathbf{X}^T\cdot\mathbf{X}\right)^{-1}\cdot \left(\mathbf{X}^T\cdot\mathbf{Y}\right)=\frac{1}{N^2 \ \text{var}\left(X_1\right)}\left[\begin{array}{cc}\sum_{i=1}^N X_{i,1}^2 &amp; -N\bar{X_1} \\ -N\bar{X_1} &amp; N\end{array}\right]\cdot\left[\begin{array}{c}N\bar{Y}\\ \sum_{i=1}^N X_{i,1}Y_i\end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Performing the inner product:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\mathbf{\theta}=\frac{1}{N^2 \ \text{var}\left(X_1\right)}\left[\begin{array}{c}N\bar{Y}\sum_{i=1}^N X_{i,1}^2-N\bar{X_1}\sum_{i=1}^N X_{i,1}Y_i \\ N\sum_{i=1}^N X_{i,1}Y_i-N^2 \bar{X_1}\bar{Y}\end{array}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This allows us to write</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_1=\frac{N\sum_{i=1}^N X_{i,1}Y_i-N^2 \bar{X_1}\bar{Y}}{N^2 \ \text{var}\left(X_1\right)}=\frac{\frac{1}{N}\sum_{i=1}^N X_{i,1}Y_i-\bar{X_1}\bar{Y}}{\text{var}\left(X_1\right)}=\frac{\frac{1}{N}\sum_{i=1}^N \left[X_{i,1}Y_i-\bar{X_1}\bar{Y}\right]}{\text{var}\left(X_1\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Wherein the last term we've brought the second term into the summation itself (which would produce \(N\bar{X_1}\bar{Y}\), which necessitates also dividing by N.  Now let's do something that looks a bit strange.  We know the following relations hold:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\bar{X_1}\bar{Y}=\frac{\bar{X_1}}{N}\sum_{i=1}^N Y_i=\frac{\bar{Y}}{N}\sum_{i=1}^N X_{i,1}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>This implies:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$2\bar{X}\bar{Y}-\frac{\bar{X_1}}{N}\sum_{i=1}^N Y_i-\frac{\bar{Y}}{N}\sum_{i=1}^N X_{i,1}=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We can add this bizarre-looking form of zero to the numerator of our fraction without issue</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_1=\frac{\frac{1}{N}\sum_{i=1}^N\left[X_{i,1}Y_i+2\bar{X_1}\bar{Y}-\bar{X_1}Y_i-\bar{Y}X_{i,1}-\bar{X_1}\bar{Y}\right]}{\text{var}\left(X_1\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Combining like terms:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_1=\frac{\frac{1}{N}\sum_{i=1}^N\left[X_{i,1}Y_i-\bar{X_1}Y_i-\bar{Y}X_{i,1}+\bar{X_1}\bar{Y}\right]}{\text{var}\left(X_1\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>And factoring:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_1=\frac{\frac{1}{N}\sum_{i=1}^N\left[\left(X_{i,1}-\bar{X_1}\right)\left(Y_i-\bar{Y}\right)\right]}{\text{var}\left(X_i\right)}=\frac{\text{covar}\left(X_1,Y\right)}{\text{var}\left(X_1\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>As we showed in an earlier post.  We now turn our attention to \(\theta_0\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_0=\frac{N\bar{Y}\sum_{i=1}^N X_{i,1}^2-N\bar{X_1}\sum_{i=1}^N X_{i,1}Y_i}{N^2 \ \text{var}\left(X_1\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We now choose to find another interesting way to write \(0\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$-N^2\bar{Y}\bar{X}^2+N^2\bar{Y}\bar{X}^2=0$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Inserting this into the numerator of the fraction:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_0=\frac{N\bar{Y}\sum_{i=1}^N X_{i,1}^2-N^2\bar{Y}\bar{X}^2+N^2\bar{Y}\bar{X}^2-N\bar{X_1}\sum_{i=1}^N X_{i,1}Y_i}{N^2 \ \text{var}\left(X_1\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Separating this into two sums to make things more obvious:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_0=\frac{N\bar{Y}\sum_{i=1}^N X_{i,1}^2-N^2\bar{Y}\bar{X_1}^2}{N^2 \ \text{var}\left(X_1\right)}+\frac{N^2\bar{Y}\bar{X_1}^2-N\bar{X_1}\sum_{i=1}^N X_{i,1}Y_i}{N^2 \ \text{var}\left(X_1\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>We'll approach the term on the left first.  Dividing by \(N^2\) and distributing \(\bar{Y}\) we have:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_0=\frac{\bar{Y}\left[\frac{1}{N}\sum_{i=1}^N X_{i,1}^2-\bar{X_1}^2\right]}{\text{var}\left(X_1\right)}+\frac{N^2\bar{Y}\bar{X_1}^2-N\bar{X_1}\sum_{i=1}^N X_{i,1}Y_i}{N^2 \ \text{var}\left(X_1\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>The term in square brackets is (as discussed earlier) simply the variance of \(X_{1}\), leaving us with:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_0=\bar{Y}+\frac{N^2\bar{Y}\bar{X_1}^2-N\bar{X_1}\sum_{i=1}^N X_{i,1}Y_i}{N^2 \ \text{var}\left(X_1\right)}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>Moving on to the right term.  Dividing by \(N^2\) and distributing \(-\bar{X_1}\):</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_0=\bar{Y}-\bar{X}\left[\frac{\frac{1}{N}\sum_{i=1}^N X_{i,1}Y_i-\bar{X_1}\bar{Y}}{\text{var}\left(X_1\right)}\right]$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>However, the term in square brackets was just shown to be equal to \(\theta_1\) leaving us with:</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>$$\theta_0=\bar{Y}-\theta_1\bar{X_1}$$</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:paragraph -->
+<p>So we have recovered the results from our previous exercise (in a more onerous way).</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:heading -->
+<h2>Demonstrative Python</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Again I’ve put together a <a href="https://github.com/doylead/doylead.me/blob/main/multivar_linear_regression/demo.py">simple script</a> that compares the methods outlined here to <a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression.html">scikit-learn’s linear regression tools</a>. Once more, we find an exact match between the tools outlined here and a trusted third-party package.</p>
+<!-- /wp:paragraph -->
+
+<!-- wp:code -->
+<pre class="wp-block-code"><code>Method          Theta0    Theta1    Theta2    Theta3    Theta4    Theta5
+------------  --------  --------  --------  --------  --------  --------
+scikit-learn  0.507704  0.746663   0.47313  0.743713  0.267044  0.350304
+analytical    0.507704  0.746663   0.47313  0.743713  0.267044  0.350304</code></pre>
+<!-- /wp:code -->
+
+<!-- wp:heading -->
+<h2>tl;dr</h2>
+<!-- /wp:heading -->
+
+<!-- wp:paragraph -->
+<p>Here we've gone over how to fit a linear model with an arbitrary number of linearly independent inputs.  We've also discussed how these methods fail if our system contains any collinearity (any input variable can be expressed as a sum of other input variables) because matrix inversion would not be possible.  Taken together these provide a simple and powerful framework to approach problems in data science and modeling.</p>
+<!-- /wp:paragraph -->
